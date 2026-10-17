@@ -2,43 +2,39 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+	use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+	public $timestamps = false;
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+	protected $fillable = [
+		'tipos_id',
+		'username',
+		'email',
+		'password',
+	];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+	protected $hidden = [
+		'password',
+	];
+
+	// Relación: Un usuario pertenece a un tipo
+	public function tipo(){
+		return $this->belongsTo(Tipo::class, 'tipos_id');
+	}
+
+	// Relación: Un usuario puede tener muchas asignaciones materias_x_usuarios
+	public function materiasXUsuarios(){
+		return $this->hasMany(MateriasXUsuario::class, 'users_id');
+	}
+
+	// Relación: Un usuario puede tener muchas materias (many-to-many)
+	public function materias(){
+		return $this->belongsToMany(Materia::class, 'materias_x_usuarios', 'users_id', 'materias_id');
+	}
 }
