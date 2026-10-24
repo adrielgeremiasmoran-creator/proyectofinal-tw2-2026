@@ -1,7 +1,9 @@
 <?php
-
+ 
 use Illuminate\Support\Facades\Route;
-
+ 
+use App\Http\Controllers\Auth\AccesoController;
+ 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -12,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
-Route::get('/', function () {
-    return view('welcome');
-});
+ 
+Route::get('/', [AccesoController::class, 'mostrarFormulario'])->name('acceso');
+Route::post('/login', [AccesoController::class, 'iniciarSesion'])->name('login');
+Route::post('/logout', [AccesoController::class, 'cerrarSesion'])->name('logout');
