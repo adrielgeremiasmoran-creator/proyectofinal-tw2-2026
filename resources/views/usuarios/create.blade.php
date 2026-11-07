@@ -223,3 +223,24 @@ $("#formCrearUsuario").on("submit", function(e){
 
 console.log("Vista crear usuario cargada");
 @endpush
+@push('JS')
+<script>
+	// Mostrar / ocultar contraseña con el botón del ojito
+	document.addEventListener('click', function(e){
+		const boton = e.target.closest('.input-group button');
+		if( !boton ) return;
+		const input = boton.closest('.input-group').querySelector('input');
+		if( !input || (input.type !== 'password' && input.dataset.verPassword !== '1') ) return;
+		e.preventDefault();
+		const icono = boton.querySelector('i');
+		if( input.type === 'password' ){
+			input.type = 'text';
+			input.dataset.verPassword = '1';
+			if( icono ){ icono.classList.remove('bi-eye'); icono.classList.add('bi-eye-slash'); }
+		} else {
+			input.type = 'password';
+			if( icono ){ icono.classList.remove('bi-eye-slash'); icono.classList.add('bi-eye'); }
+		}
+	});
+</script>
+@endpush
