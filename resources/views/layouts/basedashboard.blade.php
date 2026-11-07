@@ -128,17 +128,85 @@
 		</div>
 	</footer>
 
+	<!-- Formulario oculto para cerrar sesión -->
+	<form id="formCerrarSesion" action="{{ route('logout') }}" method="POST" class="d-none">
+		@csrf
+	</form>
+
 	<!-- jQuery -->
+	<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 	<!-- Bootstrap 5 JS -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 	<!-- SweetAlert2 JS -->
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.0/dist/sweetalert2.all.min.js"></script>
 
+	<!-- Funciones globales -->
+	<script>
+		// Activa / desactiva el estado "cargando" de un botón
+		function cambiarEstadoBoton(boton, cargando, texto){
+			let $btn;
+			if( typeof boton === 'boolean' ){
+				texto = cargando;
+				cargando = boton;
+				$btn = $('form button[type="submit"]');
+			} else {
+				$btn = $(boton);
+			}
+			if( !$btn.length ) return;
+			if( cargando ){
+				if( !$btn.data('html-original') ){
+					$btn.data('html-original', $btn.html());
+				}
+				$btn.prop('disabled', true).html(
+					'<span class="spinner-border spinner-border-sm me-1"></span>' + (texto || 'Procesando...')
+				);
+			} else {
+				$btn.prop('disabled', false);
+				if( $btn.data('html-original') ){
+					$btn.html($btn.data('html-original'));
+				}
+			}
+		}
+	</script>
 
 	<!-- JS adicionales y específicos -->
 	@stack('JS')
 
 	<!-- JavaScript que se ejecuta al cargar el DOM -->
+	<script>
+		$(document).ready(function(){
+			// Cerrar sesión con confirmación
+			$('#btnCerrarSesion').on('click', function(e){
+				e.preventDefault();
+				Swal.fire({
+					title: '¿Cerrar sesión?',
+					text: '¿Estás seguro de que deseas salir del sistema?',
+					icon: 'question',
+					showCancelButton: true,
+					confirmButtonColor: '#dc3545',
+					cancelButtonColor: '#6c757d',
+					confirmButtonText: 'Sí, salir',
+					cancelButtonText: 'Cancelar'
+				}).then(function(result){
+					if( result.isConfirmed ){
+						$('#formCerrarSesion').submit();
+					}
+				});
+			});
+
+			// Mensajes de éxito / error enviados desde el controlador
+			@if(session('success'))
+				Swal.fire({ icon: 'success', title: '¡Listo!', text: @json(session('success')), timer: 2500, showConfirmButton: false });
+			@endif
+			@if(session('error'))
+				Swal.fire({ icon: 'error', title: 'Error', text: @json(session('error')) });
+			@endif
+
+			@stack('JSOR')
+		});
+	</script>
 
 </body>
 </html>
