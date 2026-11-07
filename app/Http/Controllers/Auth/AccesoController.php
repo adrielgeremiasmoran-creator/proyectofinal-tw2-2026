@@ -1,16 +1,19 @@
 <?php
- 
+
 namespace App\Http\Controllers\Auth;
- 
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
- 
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
- 
+
 class AccesoController extends Controller
 {
 	public function mostrarFormulario(){
+		if( Auth::check() ){
+			return $this->redirigirSegunTipo();
+		}
 		return view('auth.acceso');
 	}
 	public function iniciarSesion(Request $request){
@@ -41,14 +44,26 @@ class AccesoController extends Controller
 		if( Auth::attempt( $credenciales ) ){
 			$request->session()->regenerate();
 			$usuario = Auth::user();
+			if( !$usuario->tipo ){
+				Auth::logout();
+				if( $request->ajax() ){
+					return response()->json([
+						'success' => false,
+						'message' => 'El usuario no tiene un tipo asignado.'
+					], 401);
+				}
+				return redirect()
+					->route('acceso')
+					->withErrors(['email' => 'El usuario no tiene un tipo asignado.']);
+			}
 			if( $request->ajax() ){
 				return response()->json([
 					'success' => true,
 					'message' => 'Inicio de sesión exitoso',
-					'redirect' => route('acceso')
+					'redirect' => $this->obtenerUrlRedireccion()
 				]);
 			}
-			return redirect()->route('acceso');
+			return $this->redirigirSegunTipo();
 		}
 		if( $request->ajax() ){
 			return response()->json([
@@ -67,5 +82,33 @@ class AccesoController extends Controller
 		$request->session()->regenerateToken();
 		return redirect()->route('acceso');
 	}
+	private function redirigirSegunTipo(){
+		$usuario = Auth::user();
+		$tipo = $usuario->tipo->tipo;
+		switch( $tipo ){
+			case 'admin':
+			case 'profesor':
+				return redirect()->route('usuarios.index');
+			case 'estudiante':
+				return redirect()->route('materiasxusuario.index', $usuario->id);
+			default:
+				Auth::logout();
+				return redirect()
+					->route('acceso')
+					->withErrors(['email' => 'Tipo de usuario no reconocido.']);
+		}
+	}
+	private function obtenerUrlRedireccion(){
+		$usuario = Auth::user();
+		$tipo = $usuario->tipo->tipo;
+		switch( $tipo ){
+			case 'admin':
+			case 'profesor':
+				return route('usuarios.index');
+			case 'estudiante':
+				return route('materiasxusuario.index', $usuario->id);
+			default:
+				return route('acceso');
+		}
+	}
 }
-
