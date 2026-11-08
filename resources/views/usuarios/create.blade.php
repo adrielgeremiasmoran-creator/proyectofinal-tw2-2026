@@ -50,6 +50,7 @@
                                                name="username"
                                                value="{{ old('username') }}"
                                                placeholder="Ingresa el username"
+                                               autocomplete="off"
                                                required>
                                         @error('username')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -68,6 +69,7 @@
                                                name="email"
                                                value="{{ old('email') }}"
                                                placeholder="ejemplo@correo.com"
+                                               autocomplete="off"
                                                required>
                                         @error('email')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -88,13 +90,14 @@
                                                    id="password"
                                                    name="password"
                                                    placeholder="Mínimo 6 caracteres"
+                                                   autocomplete="new-password"
                                                    required>
                                             <button class="btn btn-outline-secondary" type="button" id="togglePassword">
                                                 <i class="bi bi-eye"></i>
                                             </button>
                                         </div>
                                         @error('password')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
                                     </div>
 
@@ -110,6 +113,7 @@
                                                    id="password_confirmation"
                                                    name="password_confirmation"
                                                    placeholder="Repite la contraseña"
+                                                   autocomplete="new-password"
                                                    required>
                                             <button class="btn btn-outline-secondary" type="button" id="togglePasswordConfirm">
                                                 <i class="bi bi-eye"></i>
@@ -132,11 +136,11 @@
                                         @foreach($tipos as $tipo)
                                             <option value="{{ $tipo->id }}" {{ old('tipos_id') == $tipo->id ? 'selected' : '' }}>
                                                 @if($tipo->tipo === 'admin')
-                                                    <i class="bi bi-shield-fill-check"></i> Administrador
+                                                    Administrador
                                                 @elseif($tipo->tipo === 'profesor')
-                                                    <i class="bi bi-person-workspace"></i> Profesor
+                                                    Profesor
                                                 @else
-                                                    <i class="bi bi-mortarboard"></i> Estudiante
+                                                    Estudiante
                                                 @endif
                                             </option>
                                         @endforeach
@@ -168,62 +172,6 @@
 @endsection
 
 @push('JS')
-
-@endpush
-
-@push('JSOR')
-// Toggle para mostrar/ocultar contraseña
-$("#togglePassword").on("click", function(){
-    togglePasswordVisibility("#password", "#togglePassword");
-});
-
-$("#togglePasswordConfirm").on("click", function(){
-    togglePasswordVisibility("#password_confirmation", "#togglePasswordConfirm");
-});
-
-// Manejo del formulario
-$("#formCrearUsuario").on("submit", function(e){
-    e.preventDefault();
-    cambiarEstadoBoton(true);
-
-    $.ajax({
-        url: $(this).attr("action"),
-        method: "POST",
-        data: $(this).serialize(),
-        success: function(response){
-            Swal.fire({
-                icon: "success",
-                title: "¡Usuario creado!",
-                text: "El usuario se ha creado correctamente",
-                timer: 1500,
-                showConfirmButton: false,
-                timerProgressBar: true
-            }).then(() => {
-                window.location.href = "{{ route('usuarios.index') }}";
-            });
-        },
-        error: function(xhr){
-            cambiarEstadoBoton(false);
-
-            if( xhr.status === 422 ){
-                // Recargar para mostrar errores de validación
-                location.reload();
-            }
-            else{
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Ocurrió un problema al crear el usuario",
-                    confirmButtonText: "Aceptar"
-                });
-            }
-        }
-    });
-});
-
-console.log("Vista crear usuario cargada");
-@endpush
-@push('JS')
 <script>
 	// Mostrar / ocultar contraseña con el botón del ojito
 	document.addEventListener('click', function(e){
@@ -242,5 +190,83 @@ console.log("Vista crear usuario cargada");
 			if( icono ){ icono.classList.remove('bi-eye-slash'); icono.classList.add('bi-eye'); }
 		}
 	});
+
+	// Quitar los mensajes de error anteriores
+	function limpiarErrores(){
+		$('#formCrearUsuario .is-invalid').removeClass('is-invalid');
+		$('#formCrearUsuario .invalid-feedback').remove();
+	}
+
+	// Pintar los mensajes de error debajo de cada campo
+	function mostrarErrores(errores){
+		$.each(errores, function(campo, mensajes){
+			const $input = $('#formCrearUsuario [name="' + campo + '"]');
+			if( !$input.length ) return;
+			$input.addClass('is-invalid');
+			const $grupo = $input.closest('.input-group');
+			const $destino = $grupo.length ? $grupo : $input;
+			$destino.after('<div class="invalid-feedback d-block">' + mensajes[0] + '</div>');
+		});
+		const $primero = $('#formCrearUsuario .is-invalid').first();
+		if( $primero.length ){ $primero.focus(); }
+	}
 </script>
+@endpush
+
+@push('JSOR')
+// Quitar el error de un campo cuando el usuario lo corrige
+$("#formCrearUsuario").on("input change", ".is-invalid", function(){
+    $(this).removeClass("is-invalid");
+    const $grupo = $(this).closest(".input-group");
+    ($grupo.length ? $grupo : $(this)).next(".invalid-feedback").remove();
+});
+
+// Manejo del formulario
+$("#formCrearUsuario").on("submit", function(e){
+    e.preventDefault();
+    limpiarErrores();
+    cambiarEstadoBoton("#btnGuardar", true, "Guardando...");
+
+    $.ajax({
+        url: $(this).attr("action"),
+        method: "POST",
+        data: $(this).serialize(),
+        headers: { "Accept": "application/json" },
+        success: function(response){
+            Swal.fire({
+                icon: "success",
+                title: "¡Usuario creado!",
+                text: "El usuario se ha creado correctamente",
+                timer: 1500,
+                showConfirmButton: false,
+                timerProgressBar: true
+            }).then(() => {
+                window.location.href = "{{ route('usuarios.index') }}";
+            });
+        },
+        error: function(xhr){
+            cambiarEstadoBoton("#btnGuardar", false);
+
+            if( xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors ){
+                mostrarErrores(xhr.responseJSON.errors);
+                Swal.fire({
+                    icon: "warning",
+                    title: "Revisa el formulario",
+                    text: "Hay campos con errores, corrígelos e intenta de nuevo.",
+                    confirmButtonText: "Aceptar"
+                });
+            }
+            else{
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "Ocurrió un problema al crear el usuario",
+                    confirmButtonText: "Aceptar"
+                });
+            }
+        }
+    });
+});
+
+console.log("Vista crear usuario cargada");
 @endpush
