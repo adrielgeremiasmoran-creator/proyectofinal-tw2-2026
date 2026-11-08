@@ -9,6 +9,13 @@ use App\Models\Tipo;
 
 class TipoController extends Controller
 {
+        public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            abort_unless(auth()->user()->tipo->tipo === 'admin', 403, 'No tienes permisos para acceder a esta sección.');
+            return $next($request);
+        });
+    }
     public function index(){
         $tipos = Tipo::all();
         return view('tipos.index', compact('tipos'));
