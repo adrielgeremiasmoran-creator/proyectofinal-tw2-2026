@@ -148,17 +148,9 @@
 		}
 	}
 
-	// Gestionar materias (se completa en la Clase 5)
+	// Gestionar materias del estudiante (Clase 5)
 	function gestionarMaterias(id){
-		if( typeof Swal !== 'undefined' ){
-			Swal.fire({
-				title: 'Próximamente',
-				text: 'La gestión de materias se agrega en la Clase 5.',
-				icon: 'info'
-			});
-		} else {
-			alert('La gestión de materias se agrega en la Clase 5.');
-		}
+		window.location.href = "{{ url('materiasxusuario') }}/" + id;
 	}
 </script>
 @endpush

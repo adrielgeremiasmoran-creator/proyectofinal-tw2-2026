@@ -21,7 +21,7 @@
 	<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
 		<div class="container-fluid">
 			<!-- Brand -->
-			<a class="navbar-brand fw-bold" href="#">
+			<a class="navbar-brand fw-bold" href="{{ route('materiasxusuario.index', auth()->user()->id) }}">
 				<i class="bi bi-mortarboard-fill me-2"></i>
 				Sistema de Calificaciones
 			</a>
