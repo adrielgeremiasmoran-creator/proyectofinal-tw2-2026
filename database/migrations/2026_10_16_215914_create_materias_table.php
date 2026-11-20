@@ -1,24 +1,21 @@
 <?php
 
-namespace App\Models;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class Materia extends Model
+return new class extends Migration
 {
-	public $timestamps = false;
-	protected $fillable = [
-		'nombre'
-	];
-
-	// Relación: Una materia puede tener muchas relaciones materias_x_usuarios
-	public function materiasXUsuarios(){
-		return $this->hasMany(MateriasXUsuario::class, 'materias_id');
+	public function up(): void
+	{
+		Schema::create('materias', function (Blueprint $table) {
+			$table->id();
+			$table->string('nombre', 50)->unique();
+		});
 	}
 
-	// Relación: Una materia puede tener muchos usuarios inscritos (many-to-many)
-	public function users(){
-		return $this->belongsToMany(User::class, 'materias_x_usuarios', 'materias_id', 'users_id');
+	public function down(): void
+	{
+		Schema::dropIfExists('materias');
 	}
-}
+};

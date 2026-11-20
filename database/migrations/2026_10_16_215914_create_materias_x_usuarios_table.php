@@ -1,31 +1,22 @@
 <?php
 
-namespace App\Models;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class MateriasXUsuario extends Model
+return new class extends Migration
 {
-	public $timestamps = false;
-	protected $table = 'materias_x_usuarios';
-	protected $fillable = [
-		'materias_id',
-		'users_id'
-	];
-
-	// Relación: La asignación pertenece a una materia
-	public function materia(){
-		return $this->belongsTo(Materia::class, 'materias_id');
+	public function up(): void
+	{
+		Schema::create('materias_x_usuarios', function (Blueprint $table) {
+			$table->id();
+			$table->foreignId('users_id')->constrained('users')->onDelete('cascade');
+			$table->foreignId('materias_id')->constrained('materias')->onDelete('cascade');
+		});
 	}
 
-	// Relación: La asignación pertenece a un usuario
-	public function user(){
-		return $this->belongsTo(User::class, 'users_id');
+	public function down(): void
+	{
+		Schema::dropIfExists('materias_x_usuarios');
 	}
-
-	// Relación: Una asignación puede tener muchas calificaciones
-	public function calificaciones(){
-		return $this->hasMany(Calificacion::class, 'materias_x_usuarios_id');
-	}
-}
+};

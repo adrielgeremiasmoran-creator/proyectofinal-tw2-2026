@@ -1,21 +1,22 @@
 <?php
 
-namespace App\Models;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class Calificacion extends Model
+return new class extends Migration
 {
-	public $timestamps = false;
-	protected $table = 'calificaciones';
-	protected $fillable = [
-		'calificacion',
-		'materias_x_usuarios_id'
-	];
-
-	// Relación: La calificación pertenece a una asignación materias_x_usuarios
-	public function materiasXUsuario(){
-		return $this->belongsTo(MateriasXUsuario::class, 'materias_x_usuarios_id');
+	public function up(): void
+	{
+		Schema::create('calificaciones', function (Blueprint $table) {
+			$table->id();
+			$table->foreignId('materias_x_usuarios_id')->constrained('materias_x_usuarios')->onDelete('cascade');
+			$table->decimal('calificacion', 4, 2);
+		});
 	}
-}
+
+	public function down(): void
+	{
+		Schema::dropIfExists('calificaciones');
+	}
+};
